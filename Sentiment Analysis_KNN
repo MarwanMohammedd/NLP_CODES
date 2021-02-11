@@ -1,0 +1,39 @@
+import numpy as np
+import pandas as pd
+import re
+import nltk
+from sklearn.feature_extraction.text import CountVectorizer
+from sklearn.model_selection import train_test_split
+from sklearn.metrics import accuracy_score
+from sklearn.metrics import confusion_matrix
+from nltk.corpus import stopwords
+from nltk.stem.porter import PorterStemmer
+from sklearn.neighbors import KNeighborsClassifier
+nltk.download('stopwords')
+# to append clean text
+corpus = []
+dataset = pd.read_csv("/home/marawn/Desktop/Restaurant_Reviews.tsv",delimiter = '\t')
+for i in range(0 , dataset.shape[0]):
+    #take the sentance in dataset by iterate over colums (Review)
+    review = re.sub('[^a-zA-Z]' , ' ' , dataset['Review'][i])
+    #lower
+    review = review.lower()
+    #tekonize
+    review =review.split()
+    # create stem object
+    ps = PorterStemmer()
+    # loop for stemming each word 
+    # in string array at ith row   
+    review  = [ps.stem(word) for word in review if not word in set(stopwords.words("english"))]
+    review = ' '.join(review)
+    corpus.append(review)
+cv = CountVectorizer(max_features=1500)
+X = cv.fit_transform(corpus).toarray()
+y= dataset.iloc[:,1].values
+X_train , X_test , y_train , y_test = train_test_split(X , y , test_size = 0.2 , random_state=19)
+
+KNN_clf = KNeighborsClassifier(n_neighbors=5)
+KNN_clf.fit(X_train  , y_train)
+y_pred= KNN_clf.predict(X_test)
+print(f"K-NEATEST NEIGHBOR model accuracy(in {accuracy_score(y_test , y_pred)*100}):")
+print(f"{confusion_matrix(y_test , y_pred)})")
